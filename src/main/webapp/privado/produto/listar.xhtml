@@ -1,0 +1,208 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
+    <ui:composition template="/templates/template.xhtml">
+        <ui:define name="titulo">Manutenção de Produtos</ui:define>
+        <ui:define name="conteudo">
+            <h:form id="formListagem" prependId="false">
+                <p:growl/>
+                <p:commandButton value="Novo" actionListener="#{controleProduto.novo()}"
+                                 icon="pi pi-plus"
+                                 update="formEdicao"
+                                 process="@this"
+                                 oncomplete="PF('dlg').show();"/>
+                <p:commandButton value="Imprimir"
+                                 icon="ui-icon-print"
+                                 action="#{controleProduto.imprimirProdutos()}"
+                                 ajax="false"
+                                 onclick="this.form.target='_blank';"/>
+                <div align="center">
+                    <p:panelGrid columns="11">
+                        <p:outputLabel value="Ordem: "/>
+                        <p:selectOneMenu value="#{controleProduto.dao.ordemAtual}" id="selectOrdem"
+                                         converter="#{controleProduto.dao.converterOrdem}">                            
+                            <f:selectItems value="#{controleProduto.dao.listaOrdem}"
+                                           var="ord" itemValue="#{ord.atributo}"/>
+                            <p:ajax update="listagem"/>
+                        </p:selectOneMenu>                         
+                        <p:outputLabel value="Filtro:"/>
+                        <p:inputText value="#{controleProduto.dao.filtro}">
+                            <p:ajax update="listagem" event="blur"/>
+                        </p:inputText>
+                        <p:commandButton value="Filtrar" update="listagem" icon="pi pi-search"/>
+                        <p:outputLabel value="Máximo de Objetos"/>
+                        <p:inputNumber value="#{controleProduto.dao.maximoObjetos}" size="3"
+                                       thousandSeparator="" decimalSeparator="" decimalPlaces="0">
+                            <p:ajax event="blur" update="listagem"/> 
+                        </p:inputNumber>
+                        <p:commandButton action="#{controleProduto.dao.primeiro()}" 
+                                         title="Primeiro" icon="pi pi-step-backward" update="listagem"/>
+                        <p:commandButton action="#{controleProduto.dao.anterior()}" 
+                                         title="Anterior" icon="pi pi-chevron-left" 
+                                         update="listagem"/>
+                        <p:commandButton action="#{controleProduto.dao.proximo()}" 
+                                         title="Proximo" icon="pi pi-chevron-right" update="listagem"/>
+                        <p:commandButton action="#{controleProduto.dao.ultimo()}" 
+                                         title="Ultimo" icon="pi pi-step-forward" update="listagem"/>                          
+                    </p:panelGrid>
+                </div>
+                <p:dataTable value="#{controleProduto.dao.listaObjetos}" var="obj"
+                             id="listagem">
+                    <f:facet name="footer">
+                        <p:outputLabel value="#{controleProduto.dao.mensagemNavegacao}"/>
+                    </f:facet>   
+
+                    <p:column headerText="ID">
+                        <p:outputLabel value="#{obj.id}"/>
+                    </p:column>
+                    <p:column headerText="Nome">
+                        <p:outputLabel value="#{obj.nome}"/>
+                    </p:column>               
+                    <p:column headerText="Preço">
+                        <p:outputLabel value="#{obj.preco}">
+                            <f:convertNumber pattern="R$ 0.00"/>
+                        </p:outputLabel>
+                    </p:column>                      
+                    <p:column headerText="Marca">
+                        <p:outputLabel value="#{obj.marca.nome}"/>
+                    </p:column>                      
+                    <p:column headerText="Ações">
+                        <div align="center">
+                            <p:commandButton actionListener="#{controleProduto.alterar(obj.id)}"
+                                             icon="pi pi-pencil"
+                                             title="Editar"
+                                             update="formEdicao"
+                                             process="@this"
+                                             oncomplete="PF('dlg').show();"/>
+                            <p:commandButton actionListener="#{controleProduto.excluir(obj.id)}"
+                                             icon="pi pi-trash"
+                                             update="@form"
+                                             process="@this"
+                                             title="Remover"
+                                             onclick="if (!confirm('Confirma a exclusão?'))
+                                                         return false"/>
+                        </div>
+                    </p:column>
+                </p:dataTable>
+            </h:form>
+            <p:dialog header="Edição" widgetVar="dlg" resizable="false"
+                      modal="true" width="50%" height="100%" position="top">
+                <h:form id="formEdicao" prependId="false">
+                    <p:growl id="growl"/>
+                    <p:tabView id="tab">
+                        <p:tab title="Dados Principais">
+                            <div align="center">
+                                <p:panelGrid columns="2">
+                                    <p:outputLabel value="ID"/>
+                                    <p:inputText value="#{controleProduto.objeto.id}" size="5"
+                                                 readonly="true"/>
+                                    <p:outputLabel value="Nome" for="txtNome"/>
+                                    <p:inputText value="#{controleProduto.objeto.nome}"
+                                                 size="50" maxlength="50" id="txtNome"
+                                                 placeholder="Obrigatório"/>  
+                                    <p:outputLabel value="Descrição" for="txtDescricao"/>
+                                    <p:textEditor widgetVar="editorDescricao" id="txtDescricao"
+                                                  value="#{controleProduto.objeto.descricao}"
+                                                  height="140" />
+                                    <p:outputLabel value="Preço" for="txtPreco"/>
+                                    <p:inputNumber id="txtPreco" value="#{controleProduto.objeto.preco}"
+                                                   thousandSeparator="" decimalSeparator="." decimalPlaces="2"
+                                                   size="10" placeholder="Obrigatório"/>
+                                    <p:outputLabel value="Marca" for="selectMarca"/>
+                                    <p:selectOneMenu value="#{controleProduto.objeto.marca}" id="selectMarca"
+                                                     filter="true" filterMatchMode="startsWith" >
+                                        <f:selectItem itemLabel="Selecione um registro" noSelectionOption="true"/>
+                                        <f:converter binding="#{converterMarca}" />
+                                        <f:selectItems value="#{controleProduto.daoMarca.listaTodos}" var="mar"
+                                                       itemLabel="#{mar.nome}" />
+                                    </p:selectOneMenu>                            
+                                </p:panelGrid>
+                            </div>
+                        </p:tab>
+                        <p:tab title="Arquivos">
+                            <p:commandButton value="Novo arquivo" icon="pi pi-plus"
+                                             actionListener="#{controleProduto.novoArquivo()}"
+                                             update="formEdicaoArquivo"
+                                             process="@this"
+                                             oncomplete="PF('dlgArquivo').show();"/>
+                            <p:dataTable value="#{controleProduto.objeto.arquivos}" var="arq" id="listaArquivos" 
+                                         rowIndexVar="idxArq">
+                                <p:column headerText="Descrição" width="30%">
+                                    <p:outputLabel value="#{arq.descricao}"/>
+                                </p:column>
+                                <p:column headerText="Nome do arquivo" width="50%">
+                                    <p:commandLink action="#{controleProduto.downloadVersao(idxArq)}"
+                                                   value="#{arq.nomeArquivo}" ajax="false"/> 
+                                </p:column>                                    
+                                <p:column headerText="Ações" width="15%">
+                                    <div align="center">
+                                        <p:commandButton actionListener="#{controleProduto.removerArquivo(idxArq)}"
+                                                         icon="pi pi-trash"
+                                                         update="listaArquivos growl"
+                                                         process="@this"
+                                                         title="Remover arquivo"
+                                                         onclick="if (!confirm('Confirma a exclusão?'))
+                                                                     return false"/>
+                                    </div>
+                                </p:column>                                    
+                            </p:dataTable>       
+                        </p:tab>
+                    </p:tabView>
+                    <p:panel>
+                        <div align="center">
+                            <p:commandButton value="Salvar"
+                                             icon="pi pi-save"
+                                             actionListener="#{controleProduto.salvar()}"
+                                             update="formEdicao formListagem"
+                                             oncomplete="if(!args.validationFailed) {PF('dlg').hide();}"/>                                             
+                        </div>
+                    </p:panel>
+                </h:form>
+            </p:dialog>   
+
+            <p:dialog header="Novo arquivo" widgetVar="dlgArquivo" resizable="false"
+                      modal="true" width="60%" height="100%" position="top" >
+                <h:form id="formEdicaoArquivo" prependId="false">                    
+
+                    <div align="center">
+                        <p:panelGrid columns="2">
+                            <p:outputLabel value="Descrição" for="txtDescricao"/>
+                            <p:inputText value="#{controleProduto.arquivo.descricao}"
+                                         size="50" maxlength="50" id="txtDescricao"
+                                         placeholder="Obrigatório"/>  
+                            <p:outputLabel for="nomeArquivo" value="Arquivo:" />
+                            <p:column  colspan="2" rowspan="1">
+                                <p:inputText id="nomeArquivo"  
+                                             value="#{controleProduto.arquivo.nomeArquivo}" readonly="true" size="100"/>                                                
+                                <p:fileUpload id="uploadVersao"  
+                                              mode="advanced"  
+                                              update="growl nomeArquivo"  
+                                              auto="true"   
+                                              label="Selecionar"
+                                              fileUploadListener="#{controleProduto.enviarArquivo}" />
+                            </p:column>                                       
+                        </p:panelGrid>
+                    </div>
+
+                    <p:panel>
+                        <div align="center">
+                            <p:commandButton value="Salvar"
+                                             icon="pi pi-save"
+                                             actionListener="#{controleProduto.salvarArquivo()}"
+                                             update="tab:listaArquivos growl"
+                                             oncomplete="if(!args.validationFailed) {PF('dlgArquivo').hide();}"/>                                             
+                        </div>
+                    </p:panel>
+                </h:form>
+            </p:dialog>              
+        </ui:define>
+
+
+
+    </ui:composition>
+</html>
+

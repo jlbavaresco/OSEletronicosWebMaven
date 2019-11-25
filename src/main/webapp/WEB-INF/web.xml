@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app version="3.1" xmlns="http://xmlns.jcp.org/xml/ns/javaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd">
+    <context-param>
+        <param-name>javax.faces.PROJECT_STAGE</param-name>
+        <param-value>Development</param-value>
+    </context-param>
+    <context-param>
+        <param-name>primefaces.THEME</param-name>
+        <param-value>luna-blue</param-value>
+    </context-param>    
+    <servlet>
+        <servlet-name>Faces Servlet</servlet-name>
+        <servlet-class>javax.faces.webapp.FacesServlet</servlet-class>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>Faces Servlet</servlet-name>
+        <url-pattern>*.xhtml</url-pattern>
+    </servlet-mapping>
+    <session-config>
+        <session-timeout>
+            30
+        </session-timeout>
+    </session-config>
+    <welcome-file-list>
+        <welcome-file>index.xhtml</welcome-file>
+    </welcome-file-list>
+    <!-- Segurança -->
+    <security-constraint>
+        <display-name>UserConstraint</display-name>
+        <web-resource-collection>
+            <web-resource-name>privado</web-resource-name>
+            <description/>
+            <url-pattern>/privado/*</url-pattern>
+            <http-method>GET</http-method>
+            <http-method>PUT</http-method>
+            <http-method>POST</http-method>
+            <http-method>DELETE</http-method>
+        </web-resource-collection>
+        <auth-constraint>
+            <description/>
+            <role-name>ADMINISTRADOR</role-name>
+            <role-name>USUARIO</role-name>
+            <role-name>CLIENTE</role-name>
+        </auth-constraint>
+        <!-- deixar desabilitado https por um bug no GlassFish 5 que será corrigido -->
+        <!--user-data-constraint>
+            <description/>
+            <transport-guarantee>CONFIDENTIAL</transport-guarantee>
+        </user-data-constraint-->
+    </security-constraint>
+    <!-- Para toda a aplicação rodar em HTTPS -->
+    <security-constraint>
+        <display-name>https</display-name>
+        <web-resource-collection>
+            <web-resource-name>https</web-resource-name>
+            <description/>
+            <url-pattern>/*</url-pattern>
+            <http-method>GET</http-method>
+            <http-method>PUT</http-method>
+            <http-method>POST</http-method>
+            <http-method>DELETE</http-method>
+        </web-resource-collection>
+        <!-- deixar desabilitado https por um bug no GlassFish 5 que será corrigido -->
+        <!--user-data-constraint>
+            <description/>
+            <transport-guarantee>CONFIDENTIAL</transport-guarantee>
+        </user-data-constraint-->
+    </security-constraint>
+    <!-- configuração de log-in basico -->
+    <!--login-config>
+            <auth-method>BASIC</auth-method>
+            <realm-name>OSEletronicos-Realm</realm-name>
+    </login-config-->
+    <!-- configuração do login com formularios do JSF -->
+    <login-config>
+        <auth-method>FORM</auth-method>
+        <realm-name>OSEletronicos-Realm</realm-name>
+        <form-login-config>
+            <form-login-page>/login.xhtml</form-login-page>
+            <form-error-page>/loginerror.xhtml</form-error-page>
+        </form-login-config>
+    </login-config>    
+    <!-- Papéis de segurança -->
+    <security-role>
+        <description>Administrador</description>        
+        <role-name>ADMINISTRADOR</role-name>
+    </security-role>    
+    <security-role>
+        <description>Usuario</description>        
+        <role-name>USUARIO</role-name>
+    </security-role>
+    <security-role>
+        <description>Cliente</description>        
+        <role-name>CLIENTE</role-name>
+    </security-role>
+    
+</web-app>

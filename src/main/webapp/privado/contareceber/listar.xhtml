@@ -1,0 +1,154 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
+    <ui:composition template="/templates/template.xhtml">
+        <ui:define name="titulo">Manutenção de Conta a Receber</ui:define>
+        <ui:define name="conteudo">
+            <h:form id="formListagem" prependId="false">
+                <p:growl/>
+                <p:commandButton value="Imprimir"
+                                 icon="ui-icon-print"
+                                 action="#{controleContaReceber.imprimirContas()}"
+                                 ajax="false"
+                                 onclick="this.form.target = '_blank';"/>
+                <div align="center">
+                    <p:panelGrid columns="11">
+                        <p:outputLabel value="Ordem: "/>
+                        <p:selectOneMenu value="#{controleContaReceber.dao.ordemAtual}" id="selectOrdem"
+                                         converter="#{controleContaReceber.dao.converterOrdem}">                            
+                            <f:selectItems value="#{controleContaReceber.dao.listaOrdem}"
+                                           var="ord" itemValue="#{ord.atributo}"/>
+                            <p:ajax update="listagem"/>
+                        </p:selectOneMenu>                         
+                        <p:outputLabel value="Filtro:"/>
+                        <p:inputText value="#{controleContaReceber.dao.filtro}">
+                            <p:ajax update="listagem" event="blur"/>
+                        </p:inputText>
+                        <p:commandButton value="Filtrar" update="listagem" icon="pi pi-search"/>
+                        <p:outputLabel value="Máximo de Objetos"/>
+                        <p:inputNumber value="#{controleContaReceber.dao.maximoObjetos}" size="3"
+                                       thousandSeparator="" decimalSeparator="" decimalPlaces="0">
+                            <p:ajax event="blur" update="listagem"/> 
+                        </p:inputNumber>
+                        <p:commandButton action="#{controleContaReceber.dao.primeiro()}" 
+                                         title="Primeiro" icon="pi pi-step-backward" update="listagem"/>
+                        <p:commandButton action="#{controleContaReceber.dao.anterior()}" 
+                                         title="Anterior" icon="pi pi-chevron-left" 
+                                         update="listagem"/>
+                        <p:commandButton action="#{controleContaReceber.dao.proximo()}" 
+                                         title="Proximo" icon="pi pi-chevron-right" update="listagem"/>
+                        <p:commandButton action="#{controleContaReceber.dao.ultimo()}" 
+                                         title="Ultimo" icon="pi pi-step-forward" update="listagem"/>                          
+                    </p:panelGrid>
+                </div>
+                <div align="center">
+                    <p:panelGrid columns="6">
+                        <p:outputLabel value="Filtro no Vencimento"/>
+                        <p:selectBooleanCheckbox value="#{controleContaReceber.dao.filtroVencimento}"
+                                                 label="Filtro no vencimento"/>
+                        <p:outputLabel value="Data Inicial:"/>
+                        <p:calendar value="#{controleContaReceber.dao.dataInicial}"                                    
+                                    pattern="dd/MM/yyyy" mask="true"
+                                    locale="pt_BR" navigator="true" size="6">
+                            <f:converter converterId="converterCalendar"/>
+                        </p:calendar> 
+                        <p:outputLabel value="Data Final:"/>
+                        <p:calendar value="#{controleContaReceber.dao.dataFinal}"                                    
+                                    pattern="dd/MM/yyyy" mask="true"
+                                    locale="pt_BR" navigator="true" size="6">
+                            <f:converter converterId="converterCalendar"/>
+                        </p:calendar>                           
+                    </p:panelGrid>
+                </div>
+                <p:dataTable value="#{controleContaReceber.dao.listaObjetos}" var="obj"
+                             id="listagem" rowStyleClass="#{obj.vencida == true ? 'vencida' :  null}">
+                    <f:facet name="footer">
+                        <p:outputLabel value="#{controleContaReceber.dao.mensagemNavegacao}"/>
+                    </f:facet>   
+                    <p:column headerText="Ordem de Serviço">
+                        <p:outputLabel value="#{obj.id.ordemServico.id}"/>
+                    </p:column>
+                    <p:column headerText="Pessoa Física">
+                        <p:outputLabel value="#{obj.id.ordemServico.pessoaFisica.nome}"/>
+                    </p:column> 
+                    <p:column headerText="Numero da Parcela">
+                        <p:outputLabel value="#{obj.id.numeroParcela}"/>
+                    </p:column>                    
+                    <p:column headerText="Valor">
+                        <p:outputLabel value="#{obj.valor}">
+                            <f:convertNumber pattern="R$ 0.00"/>
+                        </p:outputLabel>
+                    </p:column>         
+                    <p:column headerText="Vencimento">
+                        <p:outputLabel value="#{obj.vencimento.time}">
+                            <f:convertDateTime pattern="dd/MM/yyyy"/>
+                        </p:outputLabel>
+                    </p:column>
+                    <p:column headerText="Valor Pago">
+                        <p:outputLabel value="#{obj.valorPago}">
+                            <f:convertNumber pattern="R$ 0.00"/>
+                        </p:outputLabel>
+                    </p:column>  
+                    <p:column headerText="Data Pagamento">
+                        <p:outputLabel value="#{obj.dataPagamento.time}">
+                            <f:convertDateTime pattern="dd/MM/yyyy"/> 
+                        </p:outputLabel>
+                    </p:column>                      
+                    <p:column headerText="Ações">
+                        <div align="center">
+                            <p:column headerText="Pagar">
+                                <p:commandButton actionListener="#{controleContaReceber.editar(obj.id)}"
+                                                 onclick="PF('dlg').show();"
+                                                 process="@this"
+                                                 update=":formPagamento" value="Pagar" rendered="#{obj.valorPago == null}"/>
+                            </p:column>	
+                        </div>
+                    </p:column>
+                </p:dataTable>
+            </h:form>
+
+
+            <p:dialog widgetVar="dlg" header="Informar Pagamento">
+                <h:form id="formPagamento">
+                    <p:growl/>
+                    <p:panelGrid columns="2">
+                        <f:facet name="footer">
+                            <div align="center">
+                                <p:commandButton value="Salvar Pagamento"
+                                                 actionListener="#{controleContaReceber.salvarPagamento()}"
+                                                 oncomplete="if (!args.validationFailed){PF('dlg').hide();}"
+                                                 update=":formPagamento :formListagem"/>                                
+                            </div>
+                        </f:facet>
+                        <p:outputLabel value="Pessoa" />
+                        <p:inputText value="#{controleContaReceber.objeto.id.ordemServico.pessoaFisica.nome}" 
+                                     readonly="true"/>                          
+                        <p:outputLabel value="Valor" />
+                        <p:inputText value="#{controleContaReceber.objeto.valor}" readonly="true"/>      
+                        <p:outputLabel value="Vencimento" />
+                        <p:inputText value="#{controleContaReceber.objeto.vencimento}" readonly="true">
+                            <f:converter converterId="converterCalendar"/>
+                        </p:inputText>                           
+                        <p:outputLabel value="Valor Pagamento" for="txtValorPagamento"/>
+                        <p:inputNumber value="#{controleContaReceber.objeto.valorPago}" id="txtValorPagamento"
+                                       thousandSeparator="" decimalSeparator="." decimalPlaces="2"/>
+                        <p:outputLabel value="Data Pagamento" for="txtDataPagamento"/>
+                        <p:calendar value="#{controleContaReceber.objeto.dataPagamento}"
+                                    id="txtDataPagamento"
+                                    pattern="dd/MM/yyyy" mask="true"
+                                    locale="pt_BR" navigator="true">
+                            <f:converter converterId="converterCalendar"/>
+                        </p:calendar>
+                    </p:panelGrid>
+                </h:form>                
+            </p:dialog>
+
+        </ui:define>
+
+    </ui:composition>
+</html>
+

@@ -1,0 +1,9 @@
+.ui-widget{
+    font-size: 12px !important;
+}
+
+.vencida{
+    background-color: red !important;
+    background-image: none !important;
+    color: #000000 !important;
+}	
