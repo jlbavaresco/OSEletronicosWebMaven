@@ -63,7 +63,6 @@ public class ControleContaReceber implements Serializable {
         }
     }    
     
- 
 
     public ContaReceberDAO getDao() {
         return dao;
